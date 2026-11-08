@@ -1,0 +1,9 @@
+{"id": 1, "category": "rag_document", "input_prompt": "What is the summary of the movie Inception?", "expected_output": "The movie follows a thief who steals secrets by infiltrating dreams."}
+{"id": 2, "category": "rag_absence", "input_prompt": "What is the phone number of director Christopher Nolan?", "expected_output": "I don't know / Abstention (information absent from corpus)."}
+{"id": 3, "category": "multi_step", "input_prompt": "Find sci-fi movies released after 2010 and add the first one to my watchlist.", "expected_output": "Watchlist updated with the selected movie after confirmation."}
+{"id": 4, "category": "ambiguous", "input_prompt": "Tell me something about this movie.", "expected_output": "Request clarification on which movie the user is referring to."}
+{"id": 5, "category": "rag_document", "input_prompt": "Who directed the movie Interstellar?", "expected_output": "Interstellar was directed by Christopher Nolan."}
+{"id": 6, "category": "rag_document", "input_prompt": "What is the main premise of The Matrix?", "expected_output": "A computer hacker learns about the true nature of his reality and his role in the war against its controllers."}
+{"id": 7, "category": "rag_document", "input_prompt": "Which actors starred in Pulp Fiction?", "expected_output": "Pulp Fiction starred John Travolta, Samuel L. Jackson, and Uma Thurman, among others."}
+{"id": 8, "category": "rag_absence", "input_prompt": "What was the exact box office revenue of Gladiator in euros?", "expected_output": "I don't know / Abstention (information absent from corpus)."}
+{"id": 9, "category": "multi_step", "input_prompt": "Search for Christopher Nolan movies, filter by those released after 2010, and show me the details of the first one.", "expected_output": "Retrieved movies, filtered them, and displayed details for the first matching movie after execution."}
