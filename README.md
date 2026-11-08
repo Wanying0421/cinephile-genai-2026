@@ -1,4 +1,4 @@
-# Cinéphile GenAI 2026
+# Cinephile GenAI 2026
 
 A movie and TV assistant built in levels, each one measured on the same test set:
 **Level 0** LLM alone → **Level 1** RAG → **Level 2** tool-using agent → **Level 3** extension.
