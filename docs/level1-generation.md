@@ -15,14 +15,29 @@ print(result)
 The default call uses `retrieval.retrieve(query, k=5)`. If the retrieval module
 has a different name, pass its function as `rag_answer(query, retrieve_fn=retrieve)`.
 Each retrieved passage must have `chunk_id`, `doc_id`, `title`, `text`, and `score`.
+The generation layer expects a numeric score where **higher means more relevant**.
+If the index returns distances where smaller values rank higher, the retriever
+must convert them before returning `score`. Confirm the convention with the
+retrieval implementation before calibrating the cutoff.
 
 | Result field | Meaning |
 |---|---|
 | `answer` | English answer with inline citations, or `I don't know.` |
 | `citations` | Distinct `doc_id#chunk_id` strings in order of appearance |
 | `abstained` | Whether the request returned the standard abstention text |
+| `abstention_reason` | `no_passages`, `below_threshold`, `model_abstained`, `empty_response`, or `citation_rejected`. `None` for an accepted answer. |
+| `rejected_answer` | Original model text for a citation rejection. Use it in evaluation traces for audit. `None` otherwise. |
 | `usage` | Prompt, completion, and total token counts. Calls skipped by the retrieval gate use zero tokens. Counts missing from the provider response are `None`. |
 | `latency` | Elapsed time in seconds, including retrieval and generation |
+
+## Citation rejection tracking
+
+Record `abstention_reason` in evaluation traces and count `citation_rejected`
+separately from explicit model abstention and retrieval gates. Each citation
+rejection also emits one INFO log event. The displayed `answer` remains the
+standard abstention text. To count factually correct answers lost to validation,
+compare each `rejected_answer` against the gold answer and supporting passages.
+The rejection count alone measures citation failures, regardless of correctness.
 
 ## Prompt history
 
@@ -55,9 +70,9 @@ passage for Interstellar used the English text in the repository corpus.
 | Case | Observed behavior |
 |---|---|
 | Question about the director of Interstellar, with a valid citation | Returns the cited answer and reports token usage |
-| No retrieved passages, or the highest score below a supplied cutoff | Abstains before generation and reports zero tokens |
-| The LLM reports that the answer is absent | Returns the standard abstention and retains the LLM token usage |
-| The LLM includes an unknown citation or leaves a line uncited | Rejects the answer and returns the standard abstention |
+| No retrieved passages, or the highest score below a supplied cutoff | Records `no_passages` or `below_threshold` and reports zero tokens |
+| The LLM reports that the answer is absent | Records `model_abstained` and retains the LLM token usage |
+| The LLM includes an unknown citation or leaves a line uncited | Records `citation_rejected` and preserves the candidate for audit |
 
 ## Live LLM checks
 
