@@ -1,4 +1,4 @@
-"""Download movie/TV texts from Wikipedia -> data/corpus_wiki.jsonl
+"""Download movie/TV texts from Wikipedia -> data/corpus.jsonl
 
 Usage: python build_corpus.py
 Input : data/titles.txt, one line per work: id|Wikipedia title|type|year
@@ -14,7 +14,7 @@ import requests
 
 ROOT = Path(__file__).parent
 TITLES = ROOT / "data" / "titles.txt"
-OUT = ROOT / "data" / "corpus_wiki.jsonl"
+OUT = ROOT / "data" / "corpus.jsonl"
 API = "https://en.wikipedia.org/w/api.php"
 HEADERS = {"User-Agent": "CinephileRAG-student-project/0.1 (https://github.com/Wanying0421/cinephile-genai-2026)"}
 
