@@ -1,0 +1,44 @@
+inception-2010|Inception|movie|2010
+interstellar-2014|Interstellar (film)|movie|2014
+the-matrix-1999|The Matrix|movie|1999
+pulp-fiction-1994|Pulp Fiction|movie|1994
+dark-2017|Dark (TV series)|tv|2017
+the-queens-gambit-2020|The Queen's Gambit (miniseries)|tv|2020
+tenet-2020|Tenet (film)|movie|2020
+memento-2000|Memento (film)|movie|2000
+the-prestige-2006|The Prestige (film)|movie|2006
+the-dark-knight-2008|The Dark Knight|movie|2008
+oppenheimer-2023|Oppenheimer (film)|movie|2023
+the-matrix-reloaded-2003|The Matrix Reloaded|movie|2003
+the-matrix-resurrections-2021|The Matrix Resurrections|movie|2021
+arrival-2016|Arrival (film)|movie|2016
+gravity-2013|Gravity (2013 film)|movie|2013
+the-martian-2015|The Martian (film)|movie|2015
+ad-astra-2019|Ad Astra (film)|movie|2019
+2001-a-space-odyssey-1968|2001: A Space Odyssey (film)|movie|1968
+paprika-2006|Paprika (2006 film)|movie|2006
+shutter-island-2010|Shutter Island (film)|movie|2010
+source-code-2011|Source Code|movie|2011
+looper-2012|Looper (film)|movie|2012
+primer-2004|Primer (film)|movie|2004
+12-monkeys-1995|12 Monkeys|movie|1995
+dark-city-1998|Dark City (1998 film)|movie|1998
+existenz-1999|eXistenZ|movie|1999
+reservoir-dogs-1992|Reservoir Dogs|movie|1992
+jackie-brown-1997|Jackie Brown (film)|movie|1997
+kill-bill-volume-1-2003|Kill Bill: Volume 1|movie|2003
+once-upon-a-time-in-hollywood-2019|Once Upon a Time in Hollywood|movie|2019
+stranger-things-2016|Stranger Things|tv|2016
+1899-2022|1899 (TV series)|tv|2022
+westworld-2016|Westworld (TV series)|tv|2016
+black-mirror-2011|Black Mirror|tv|2011
+chernobyl-2019|Chernobyl (miniseries)|tv|2019
+searching-for-bobby-fischer-1993|Searching for Bobby Fischer|movie|1993
+ivans-childhood-1962|Ivan's Childhood|movie|1962
+andrei-rublev-1966|Andrei Rublev (film)|movie|1966
+solaris-1972|Solaris (1972 film)|movie|1972
+mirror-1975|Mirror (1975 film)|movie|1975
+stalker-1979|Stalker (1979 film)|movie|1979
+nostalghia-1983|Nostalghia|movie|1983
+the-sacrifice-1986|The Sacrifice (1986 film)|movie|1986
+solaris-2002|Solaris (2002 film)|movie|2002
