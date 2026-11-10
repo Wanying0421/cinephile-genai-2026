@@ -6,50 +6,50 @@ Use the existing Level 0 LLM settings in `.env`. Once the retrieval module is
 available as `retrieval.py`, call the generator from the repository root.
 
 ```python
-from level1 import rag\_answer
+from level1 import rag_answer
 
-result = rag\_answer("Who directed Interstellar?")
+result = rag_answer("Who directed Interstellar?")
 print(result)
 ```
 
 The default call uses `retrieval.retrieve(query, k=5)`. If the retrieval module
-has a different name, pass its function as `rag\_answer(query, retrieve\_fn=retrieve)`.
-Each retrieved passage must have `chunk\_id`, `doc\_id`, `title`, `text`, and `score`.
+has a different name, pass its function as `rag_answer(query, retrieve_fn=retrieve)`.
+Each retrieved passage must have `chunk_id`, `doc_id`, `title`, `text`, and `score`.
 The generation layer expects a numeric score where **higher means more relevant**.
 If the index returns distances where smaller values rank higher, the retriever
 must convert them before returning `score`. Confirm the convention with the
 retrieval implementation before calibrating the cutoff.
 
-|Result field|Meaning|
-|-|-|
-|`answer`|English answer with inline citations, or `I don't know.`|
-|`citations`|Distinct `doc\_id#chunk\_id` strings in order of appearance|
-|`abstained`|Whether the request returned the standard abstention text|
-|`abstention\_reason`|`no\_passages`, `below\_threshold`, `model\_abstained`, `empty\_response`, or `citation\_rejected`. `None` for an accepted answer.|
-|`rejected\_answer`|Original model text for a citation rejection. Use it in evaluation traces for audit. `None` otherwise.|
-|`usage`|Prompt, completion, and total token counts. Calls skipped by the retrieval gate use zero tokens. Counts missing from the provider response are `None`.|
-|`latency`|Elapsed time in seconds, including retrieval and generation|
+| Result field | Meaning |
+|---|---|
+| `answer` | English answer with inline citations, or `I don't know.` |
+| `citations` | Distinct `doc_id#chunk_id` strings in order of appearance |
+| `abstained` | Whether the request returned the standard abstention text |
+| `abstention_reason` | `no_passages`, `below_threshold`, `model_abstained`, `empty_response`, or `citation_rejected`. `None` for an accepted answer. |
+| `rejected_answer` | Original model text for a citation rejection. Use it in evaluation traces for audit. `None` otherwise. |
+| `usage` | Prompt, completion, and total token counts. Calls skipped by the retrieval gate use zero tokens. Counts missing from the provider response are `None`. |
+| `latency` | Elapsed time in seconds, including retrieval and generation |
 
 ## Citation rejection tracking
 
-Record `abstention\_reason` in evaluation traces and count `citation\_rejected`
+Record `abstention_reason` in evaluation traces and count `citation_rejected`
 separately from explicit model abstention and retrieval gates. Each citation
 rejection also emits one INFO log event. The displayed `answer` remains the
 standard abstention text. To count factually correct answers lost to validation,
-compare each `rejected\_answer` against the gold answer and supporting passages.
+compare each `rejected_answer` against the gold answer and supporting passages.
 The rejection count alone measures citation failures, regardless of correctness.
 
 ## Prompt history
 
-* **v1:** Answer in English using the supplied passages. Put a citation after
-each factual statement, and abstain when the question is ambiguous, outside
-the scope, or unsupported. The validator checks citation IDs and requires a
-citation at the end of each answer line. Whether a cited passage supports a
-particular claim must still be checked during evaluation.
+- **v1:** Answer in English using the supplied passages. Put a citation after
+  each factual statement, and abstain when the question is ambiguous, outside
+  the scope, or unsupported. The validator checks citation IDs and requires a
+  citation at the end of each answer line. Whether a cited passage supports a
+  particular claim must still be checked during evaluation.
 
 ## Abstention threshold
 
-Set `RAG\_MIN\_SCORE` in `.env`, or pass `min\_score` for a single run. If the highest
+Set `RAG_MIN_SCORE` in `.env`, or pass `min_score` for a single run. If the highest
 retrieved score is below the cutoff, the generator abstains before calling the
 LLM. An empty result always triggers abstention. With the cutoff unset, the
 prompt and the citation validator handle queries with nonempty results.
@@ -58,7 +58,7 @@ After the retrieval module and index are available, run the comparison from the
 repository root using the retrieval mode selected for Level 1.
 
 ```bash
-python calibrate\_abstention.py
+python calibrate_abstention.py
 ```
 
 Pass a different JSONL path as the first argument to use a separate calibration
@@ -77,12 +77,12 @@ available. No empirical cutoff has been selected yet.
 These cases were exercised with a simulated retriever and LLM response. The
 passage for Interstellar used the English text in the repository corpus.
 
-|Case|Observed behavior|
-|-|-|
-|Question about the director of Interstellar, with a valid citation|Returns the cited answer and reports token usage|
-|No retrieved passages, or the highest score below a supplied cutoff|Records `no\_passages` or `below\_threshold` and reports zero tokens|
-|The LLM reports that the answer is absent|Records `model\_abstained` and retains the LLM token usage|
-|The LLM includes an unknown citation or leaves a line uncited|Records `citation\_rejected` and preserves the candidate for audit|
+| Case | Observed behavior |
+|---|---|
+| Question about the director of Interstellar, with a valid citation | Returns the cited answer and reports token usage |
+| No retrieved passages, or the highest score below a supplied cutoff | Records `no_passages` or `below_threshold` and reports zero tokens |
+| The LLM reports that the answer is absent | Records `model_abstained` and retains the LLM token usage |
+| The LLM includes an unknown citation or leaves a line uncited | Records `citation_rejected` and preserves the candidate for audit |
 
 ## Live LLM checks
 
@@ -90,10 +90,7 @@ On November 10, 2026, both requests used `openai/gpt-oss-120b` via Groq. The
 retriever was simulated by passing the Interstellar corpus entry as one passage.
 Each row records a single call.
 
-|Question|Observed result|Abstained|Total tokens|Latency (s)|
-|-|-|-|-:|-:|
-|Who directed Interstellar?|Christopher Nolan directed Interstellar. `\[interstellar-2014#001]`|No|347|13.14|
-|Who composed the soundtrack for Interstellar?|I don't know.|Yes|344|1.62|
-
-
-
+| Question | Observed result | Abstained | Total tokens | Latency (s) |
+|---|---|---|---:|---:|
+| Who directed Interstellar? | Christopher Nolan directed Interstellar. `[interstellar-2014#001]` | No | 347 | 13.14 |
+| Who composed the soundtrack for Interstellar? | I don't know. | Yes | 344 | 1.62 |
