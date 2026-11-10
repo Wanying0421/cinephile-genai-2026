@@ -1,0 +1,71 @@
+# Level 1 generation handoff
+
+## Run the generator
+
+Use the existing Level 0 LLM settings in `.env`. Once the retrieval module is
+available as `retrieval.py`, call the generator from the repository root.
+
+```python
+from level1 import rag_answer
+
+result = rag_answer("Who directed Interstellar?")
+print(result)
+```
+
+The default call uses `retrieval.retrieve(query, k=5)`. If the retrieval module
+has a different name, pass its function as `rag_answer(query, retrieve_fn=retrieve)`.
+Each retrieved passage must have `chunk_id`, `doc_id`, `title`, `text`, and `score`.
+
+| Result field | Meaning |
+|---|---|
+| `answer` | English answer with inline citations, or `I don't know.` |
+| `citations` | Distinct `doc_id#chunk_id` strings in order of appearance |
+| `abstained` | Whether the request returned the standard abstention text |
+| `usage` | Prompt, completion, and total token counts. Calls skipped by the retrieval gate use zero tokens. Counts missing from the provider response are `None`. |
+| `latency` | Elapsed time in seconds, including retrieval and generation |
+
+## Prompt history
+
+- **v1:** Answer in English using the supplied passages. Put a citation after
+  each factual statement, and abstain when the question is ambiguous, outside
+  the scope, or unsupported. The validator checks citation IDs and requires a
+  citation at the end of each answer line. Whether a cited passage supports a
+  particular claim must still be checked during evaluation.
+
+## Abstention threshold
+
+Set `RAG_MIN_SCORE` in `.env`, or pass `min_score` for a single run. If the highest
+retrieved score is below the cutoff, the generator abstains before calling the
+LLM. An empty result always triggers abstention. With the cutoff unset, the
+prompt and the citation validator handle queries with nonempty results.
+
+Use the retrieval mode selected for Level 1 when calibrating the cutoff. Gather
+the top score for each answerable and out-of-corpus test question. Compare the
+prompt-only baseline with several cutoffs drawn from those observed scores.
+Record how many answerable cases each cutoff blocks and how many out-of-corpus
+cases it correctly blocks. Keep the threshold with the best trade-off and record
+it along with the retrieval mode. Keep the cutoff unset until real retrieval
+scores are available. No empirical cutoff has been selected yet.
+
+## Offline checks
+
+These cases were exercised with a simulated retriever and LLM response. The
+passage for Interstellar used the English text in the repository corpus.
+
+| Case | Observed behavior |
+|---|---|
+| Question about the director of Interstellar, with a valid citation | Returns the cited answer and reports token usage |
+| No retrieved passages, or the highest score below a supplied cutoff | Abstains before generation and reports zero tokens |
+| The LLM reports that the answer is absent | Returns the standard abstention and retains the LLM token usage |
+| The LLM includes an unknown citation or leaves a line uncited | Rejects the answer and returns the standard abstention |
+
+## Live LLM checks
+
+On November 10, 2026, both requests used `openai/gpt-oss-120b` via Groq. The
+retriever was simulated by passing the Interstellar corpus entry as one passage.
+Each row records a single call.
+
+| Question | Observed result | Abstained | Total tokens | Latency (s) |
+|---|---|---|---:|---:|
+| Who directed Interstellar? | Christopher Nolan directed Interstellar. `[interstellar-2014#001]` | No | 347 | 13.14 |
+| Who composed the soundtrack for Interstellar? | I don't know. | Yes | 344 | 1.62 |
