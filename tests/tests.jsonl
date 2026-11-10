@@ -18,7 +18,7 @@
 {"id": 18, "category": "rag_document", "input_prompt": "In which town does the child disappear in Dark?", "expected_output": "The child disappears in the German town of Winden.", "relevant_doc_ids": ["dark-2017"]}
 {"id": 19, "category": "rag_document", "input_prompt": "What does Dom Cobb need to do for Saito?", "expected_output": "Saito hires Cobb to plant an idea in the mind of Robert Fischer.", "relevant_doc_ids": ["inception-2010"]}
 {"id": 20, "category": "rag_document", "input_prompt": "What type of media is The Queen's Gambit?", "expected_output": "The Queen's Gambit is a TV series released in 2020.", "relevant_doc_ids": ["the-queens-gambit-2020"]}
-{"id": 21, "category": "rag_absence", "input_prompt": "What is the exact budget of the movie Inception?", "expected_output": "I don't know / Abstention (information absent from corpus).", "relevant_doc_ids": []}
+{"id": 21, "category": "rag_document", "input_prompt": "What is the official budget of the movie Inception?", "expected_output": "Inception's official budget was US$160 million.", "relevant_doc_ids": ["inception-2010"]}
 {"id": 22, "category": "rag_absence", "input_prompt": "Who won the Academy Award for Best Actor in 1999?", "expected_output": "I don't know / Abstention (information absent from corpus).", "relevant_doc_ids": []}
 {"id": 23, "category": "rag_absence", "input_prompt": "What is the release date of Interstellar in France?", "expected_output": "I don't know / Abstention (information absent from corpus).", "relevant_doc_ids": []}
 {"id": 24, "category": "rag_absence", "input_prompt": "Where was Pulp Fiction filmed?", "expected_output": "I don't know / Abstention (information absent from corpus).", "relevant_doc_ids": []}
