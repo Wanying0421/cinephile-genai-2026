@@ -1,20 +1,22 @@
 """Download movie/TV texts from Wikipedia -> data/corpus.jsonl
 
-Usage: python build_corpus.py
+Usage: python scripts/build_corpus.py
 Input : data/titles.txt, one line per work: id|Wikipedia title|type|year
 Output: same fields as data/corpus.jsonl (id, title, type, year, text, source_url)
 Wikipedia text is licensed CC BY-SA 4.0.
 """
 import json
 import re
+import shutil
 import time
 from pathlib import Path
 
 import requests
 
-ROOT = Path(__file__).parent
+ROOT = Path(__file__).resolve().parent.parent  # project root (this file lives in scripts/)
 TITLES = ROOT / "data" / "titles.txt"
 OUT = ROOT / "data" / "corpus.jsonl"
+BACKUP = ROOT / "data" / "corpus_v0.jsonl"
 API = "https://en.wikipedia.org/w/api.php"
 HEADERS = {"User-Agent": "CinephileRAG-student-project/0.1 (https://github.com/Wanying0421/cinephile-genai-2026)"}
 
@@ -57,6 +59,11 @@ def keep_sections(text):
 
 
 def main():
+    # Back up the original corpus once, before overwriting it
+    if OUT.exists() and not BACKUP.exists():
+        shutil.copy(OUT, BACKUP)
+        print(f"Backed up old corpus -> {BACKUP}")
+
     # utf-8-sig: ignores the invisible BOM some Windows editors add
     lines = TITLES.read_text(encoding="utf-8-sig").splitlines()
     entries = []
@@ -70,6 +77,7 @@ def main():
         entries.append(fields)
 
     n_ok = 0
+    word_counts = []
     with open(OUT, "w", encoding="utf-8") as f:
         for doc_id, wiki_title, kind, year in entries:
             real_title, extract = fetch(wiki_title)
@@ -81,14 +89,20 @@ def main():
             if n_words < 100:
                 print(f"[TOO SHORT] {doc_id:<35} {n_words} words")
                 continue
-            doc = {"id": doc_id, "title": real_title, "type": kind, "year": int(year),
+            clean_title = re.sub(r"\s*\([^)]*\)$", "", real_title)  # "Interstellar (film)" -> "Interstellar"
+            doc = {"id": doc_id, "title": clean_title, "type": kind, "year": int(year),
                    "text": text,
                    "source_url": "https://en.wikipedia.org/wiki/" + real_title.replace(" ", "_")}
             f.write(json.dumps(doc, ensure_ascii=False) + "\n")
             n_ok += 1
+            word_counts.append(n_words)
             print(f"[OK]        {doc_id:<35} {n_words} words")
             time.sleep(1.5)  # be polite to the Wikipedia API
+
     print(f"\nDone: {n_ok}/{len(entries)} documents -> {OUT}")
+    if word_counts:
+        print(f"Words per document: min {min(word_counts)}, "
+              f"avg {sum(word_counts) // len(word_counts)}, max {max(word_counts)}")
 
 
 if __name__ == "__main__":
