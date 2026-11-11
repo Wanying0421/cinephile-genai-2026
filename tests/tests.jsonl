@@ -38,3 +38,7 @@
 {"id": 38, "category": "ambiguous", "input_prompt": "Show me more details.", "expected_output": "Prompt the user to specify which title or aspect they want more details on."}
 {"id": 39, "category": "ambiguous", "input_prompt": "Play the video.", "expected_output": "Inform the user that the system handles text corpus searches and ask for clarification."}
 {"id": 40, "category": "ambiguous", "input_prompt": "What do you think?", "expected_output": "Ask the user to provide a specific question or topic for evaluation."}
+{"id": 41, "category": "rag_document", "input_prompt": "What threat causes Cooper to join the crew in Interstellar?", "expected_output": "Crop failures threaten life on Earth, prompting former pilot Cooper to join the crew.", "relevant_doc_ids": ["interstellar-2014"]}
+{"id": 42, "category": "rag_document", "input_prompt": "What is the profession of Dom Cobb in Inception?", "expected_output": "Dom Cobb is a thief who enters other people's dreams to steal information.", "relevant_doc_ids": ["inception-2010"]}
+{"id": 43, "category": "rag_document", "input_prompt": "What group does Neo join in The Matrix?", "expected_output": "Neo joins a group of rebels led by Morpheus.", "relevant_doc_ids": ["the-matrix-1999"]}
+{"id": 44, "category": "rag_document", "input_prompt": "Which families investigate the missing child in the TV series Dark?", "expected_output": "Four families investigate the disappearance in the German town of Winden.", "relevant_doc_ids": ["dark-2017"]}
