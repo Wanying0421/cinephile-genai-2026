@@ -75,8 +75,26 @@ preserving the answerable cases that passed with the cutoff off. No LLM calls
 are made during calibration.
 
 Record the table and retrieval mode, then verify the suggested setting with the
-full Level 1 pipeline. Keep the cutoff unset until real retrieval scores are
-available. No empirical cutoff has been selected yet.
+full Level 1 pipeline.
+
+### Calibration result, November 11, 2026
+
+Configuration used: 100-word chunks, hybrid retrieval, and
+`intfloat/multilingual-e5-base`. The run included 40 answerable queries and six
+out-of-corpus cases, combining the current document tests with the 20 difficult
+retrieval questions. Selected rows from the observed table are shown below.
+
+| Minimum dense score | Answerable passed | Out-of-corpus blocked |
+|---|---:|---:|
+| 0.7898 | 25/40 | 1/6 |
+| 0.83 | 19/40 | 4/6 |
+| 0.8577 | 9/40 | 6/6 |
+
+The script recommended leaving `RAG_MIN_SCORE` unset. The tested cutoffs offered
+no additional filtering of out-of-corpus cases while preserving all answerable
+queries that passed the baseline gate. The end-to-end checks below therefore
+used an empty cutoff. The table measures the gate's forwarding behavior, and
+answer quality is checked separately.
 
 ## Offline checks
 
@@ -100,3 +118,24 @@ Each row records a single call.
 |---|---|---|---:|---:|
 | Who directed Interstellar? | Christopher Nolan directed Interstellar. `[interstellar-2014#001]` | No | 347 | 13.14 |
 | Who composed the soundtrack for Interstellar? | I don't know. | Yes | 344 | 1.62 |
+
+## End-to-end checks, November 11, 2026
+
+These requests used the real default `retrieve()` function and Groq's
+`openai/gpt-oss-120b`, with the cutoff unset. The first request includes initial
+retrieval model loading. Each timing describes a single call.
+
+| Question | Observed result | Reason | Total tokens | Latency (s) |
+|---|---|---|---:|---:|
+| Who directed Interstellar? | Christopher Nolan directed Interstellar. `[interstellar-2014#0]` | Accepted | 1133 | 20.62 |
+| Who composed the music for Inception? | I don't know. | `model_abstained` | 1084 | 0.81 |
+| In which film does a father send data to his daughter by moving the second hand of her wristwatch? | I don't know. | `model_abstained` | 1110 | 0.93 |
+
+The first call returned the correct director with a valid citation. The second
+correctly abstained because the corpus does not supply the composer's name.
+The wristwatch question is answerable as Interstellar, so its abstention is an
+end-to-end failure to retain for analysis. The retrieval README also lists this
+question family among its known failures. The two abstentions were explicitly
+produced by the model, and both have `rejected_answer` set to `null`.
+
+Raw records are in [generation-integration.jsonl](generation-integration.jsonl).
