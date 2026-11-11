@@ -1,0 +1,141 @@
+# Level 1 generation handoff
+
+## Run the generator
+
+Use the existing Level 0 LLM settings in `.env`. Once the retrieval module is
+available, call the generator from the repository root.
+
+```python
+from level1 import rag_answer
+
+result = rag_answer("Who directed Interstellar?")
+print(result)
+```
+
+The default call uses `retrieval.retrieve(query, k=5)`. If the retrieval module
+has a different name, pass its function as `rag_answer(query, retrieve_fn=retrieve)`.
+Each retrieved passage includes `chunk_id`, `doc_id`, `title`, `text`, `score`,
+and `dense_score`. The supplied `chunk_id` already contains the document ID,
+for example `inception-2010#3`. The generator cites it directly as
+`[inception-2010#3]`. It uses the first returned passage's `dense_score` for the
+abstention gate. This is cosine similarity, where higher means more relevant.
+The retrieval `score` controls ranking and is an RRF score in hybrid mode.
+
+| Result field | Meaning |
+|---|---|
+| `answer` | English answer with inline citations, or `I don't know.` |
+| `citations` | Distinct retriever-provided `chunk_id` strings in order of appearance |
+| `abstained` | Whether the request returned the standard abstention text |
+| `abstention_reason` | `no_passages`, `below_threshold`, `model_abstained`, `empty_response`, or `citation_rejected`. `None` for an accepted answer. |
+| `rejected_answer` | Original model text for a citation rejection. Use it in evaluation traces for audit. `None` otherwise. |
+| `usage` | Prompt, completion, and total token counts. Calls skipped by the retrieval gate use zero tokens. Counts missing from the provider response are `None`. |
+| `latency` | Elapsed time in seconds, including retrieval and generation |
+
+## Citation rejection tracking
+
+Record `abstention_reason` in evaluation traces and count `citation_rejected`
+separately from explicit model abstention and retrieval gates. Each citation
+rejection also emits one INFO log event. The displayed `answer` remains the
+standard abstention text. To count factually correct answers lost to validation,
+compare each `rejected_answer` against the gold answer and supporting passages.
+The rejection count alone measures citation failures, regardless of correctness.
+
+## Prompt history
+
+- **v1:** Answer in English using the supplied passages. Put a citation after
+  each factual statement, and abstain when the question is ambiguous, outside
+  the scope, or unsupported. The validator checks citation IDs and requires a
+  citation at the end of each answer line. Whether a cited passage supports a
+  particular claim must still be checked during evaluation.
+- **v2:** Use the retriever-provided `chunk_id` directly for citations. The
+  abstention gate and calibration use the top result's `dense_score`.
+
+## Abstention threshold
+
+Set `RAG_MIN_SCORE` in `.env`, or pass `min_score` for a single run. If the first
+returned passage's `dense_score` is below the cutoff, the generator abstains
+before calling the LLM. An empty result always triggers abstention. With the cutoff unset, the
+prompt and the citation validator handle queries with nonempty results.
+
+After the retrieval module and index are available, run the comparison from the
+repository root using the retrieval mode selected for Level 1.
+
+```bash
+python calibrate_abstention.py --retrieval-cases data/retrieval_tests.jsonl
+```
+
+Pass a different JSONL path as the first argument to use a separate calibration
+set. The additional retrieval cases include difficult paraphrased questions so
+the cutoff also preserves valid queries with lower similarities. Repeated
+questions within a category are counted once. The script retrieves once per
+unique answerable or out-of-corpus question and prints the gate-only results
+for the baseline and the observed top-result dense score cutoffs. It
+suggests a cutoff only when it blocks additional out-of-corpus cases while
+preserving the answerable cases that passed with the cutoff off. No LLM calls
+are made during calibration.
+
+Record the table and retrieval mode, then verify the suggested setting with the
+full Level 1 pipeline.
+
+### Calibration result, November 11, 2026
+
+Configuration used: 100-word chunks, hybrid retrieval, and
+`intfloat/multilingual-e5-base`. The run included 40 answerable queries and six
+out-of-corpus cases, combining the current document tests with the 20 difficult
+retrieval questions. Selected rows from the observed table are shown below.
+
+| Minimum dense score | Answerable passed | Out-of-corpus blocked |
+|---|---:|---:|
+| 0.7898 | 25/40 | 1/6 |
+| 0.83 | 19/40 | 4/6 |
+| 0.8577 | 9/40 | 6/6 |
+
+The script recommended leaving `RAG_MIN_SCORE` unset. The tested cutoffs offered
+no additional filtering of out-of-corpus cases while preserving all answerable
+queries that passed the baseline gate. The end-to-end checks below therefore
+used an empty cutoff. The table measures the gate's forwarding behavior, and
+answer quality is checked separately.
+
+## Offline checks
+
+These cases were exercised with a simulated retriever and LLM response. The
+passage for Interstellar used the English text in the repository corpus.
+
+| Case | Observed behavior |
+|---|---|
+| Question about the director of Interstellar, with a valid citation | Returns the cited answer and reports token usage |
+| No retrieved passages, or the highest score below a supplied cutoff | Records `no_passages` or `below_threshold` and reports zero tokens |
+| The LLM reports that the answer is absent | Records `model_abstained` and retains the LLM token usage |
+| The LLM includes an unknown citation or leaves a line uncited | Records `citation_rejected` and preserves the candidate for audit |
+
+## Live LLM checks
+
+On November 10, 2026, both requests used `openai/gpt-oss-120b` via Groq. The
+retriever was simulated by passing the Interstellar corpus entry as one passage.
+Each row records a single call.
+
+| Question | Observed result | Abstained | Total tokens | Latency (s) |
+|---|---|---|---:|---:|
+| Who directed Interstellar? | Christopher Nolan directed Interstellar. `[interstellar-2014#001]` | No | 347 | 13.14 |
+| Who composed the soundtrack for Interstellar? | I don't know. | Yes | 344 | 1.62 |
+
+## End-to-end checks, November 11, 2026
+
+These requests used the real default `retrieve()` function and Groq's
+`openai/gpt-oss-120b`, with the cutoff unset. The first request includes initial
+retrieval model loading. Each timing describes a single call.
+
+| Question | Observed result | Reason | Total tokens | Latency (s) |
+|---|---|---|---:|---:|
+| Who directed Interstellar? | Christopher Nolan directed Interstellar. `[interstellar-2014#0]` | Accepted | 1133 | 20.62 |
+| Who composed the music for Inception? | I don't know. | `model_abstained` | 1084 | 0.81 |
+| In which film does a father send data to his daughter by moving the second hand of her wristwatch? | I don't know. | `model_abstained` | 1110 | 0.93 |
+
+The first call returned the correct director with a valid citation. The second
+correctly abstained because the corpus does not supply the composer's name.
+The wristwatch question is answerable as Interstellar, so its abstention is an
+end-to-end failure to retain for analysis. The retrieval README also lists this
+question family among its known failures. The two abstentions were explicitly
+produced by the model, and both have `rejected_answer` set to `null`.
+
+Raw records are in [generation-integration.jsonl](generation-integration.jsonl).
