@@ -1,2 +1,12 @@
 openai>=1.40
 python-dotenv>=1.0
+requests
+numpy
+sentence-transformers
+faiss-cpu
+rank-bm25
+
+sentence-transformers
+faiss-cpu
+rank_bm25
+numpy
