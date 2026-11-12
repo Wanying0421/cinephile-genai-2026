@@ -5,3 +5,4 @@ __pycache__/
 results/*.jsonl
 test.py
 index/
+data/*.tmp

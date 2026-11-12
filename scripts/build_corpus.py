@@ -4,8 +4,13 @@ Usage: python scripts/build_corpus.py
 Input : data/titles.txt, one line per work: id|Wikipedia title|type|year
 Output: same fields as data/corpus.jsonl (id, title, type, year, text, source_url)
 Wikipedia text is licensed CC BY-SA 4.0.
+
+The corpus is written to data/corpus.jsonl.tmp first and only replaces
+data/corpus.jsonl after every download has succeeded, so a failed or
+interrupted run never destroys the existing corpus.
 """
 import json
+import os
 import re
 import shutil
 import time
@@ -78,26 +83,36 @@ def main():
 
     n_ok = 0
     word_counts = []
-    with open(OUT, "w", encoding="utf-8") as f:
-        for doc_id, wiki_title, kind, year in entries:
-            real_title, extract = fetch(wiki_title)
-            if real_title is None:
-                print(f"[MISSING]   {doc_id:<35} '{wiki_title}' not found")
-                continue
-            text = keep_sections(extract)
-            n_words = len(text.split())
-            if n_words < 100:
-                print(f"[TOO SHORT] {doc_id:<35} {n_words} words")
-                continue
-            clean_title = re.sub(r"\s*\([^)]*\)$", "", real_title)  # "Interstellar (film)" -> "Interstellar"
-            doc = {"id": doc_id, "title": clean_title, "type": kind, "year": int(year),
-                   "text": text,
-                   "source_url": "https://en.wikipedia.org/wiki/" + real_title.replace(" ", "_")}
-            f.write(json.dumps(doc, ensure_ascii=False) + "\n")
-            n_ok += 1
-            word_counts.append(n_words)
-            print(f"[OK]        {doc_id:<35} {n_words} words")
-            time.sleep(1.5)  # be polite to the Wikipedia API
+    tmp = OUT.with_suffix(".jsonl.tmp")  # data/corpus.jsonl.tmp
+    try:
+        with open(tmp, "w", encoding="utf-8") as f:
+            for doc_id, wiki_title, kind, year in entries:
+                real_title, extract = fetch(wiki_title)
+                if real_title is None:
+                    print(f"[MISSING]   {doc_id:<35} '{wiki_title}' not found")
+                    continue
+                text = keep_sections(extract)
+                n_words = len(text.split())
+                if n_words < 100:
+                    print(f"[TOO SHORT] {doc_id:<35} {n_words} words")
+                    continue
+                clean_title = re.sub(r"\s*\([^)]*\)$", "", real_title)  # "Interstellar (film)" -> "Interstellar"
+                doc = {"id": doc_id, "title": clean_title, "type": kind, "year": int(year),
+                       "text": text,
+                       "source_url": "https://en.wikipedia.org/wiki/" + real_title.replace(" ", "_")}
+                f.write(json.dumps(doc, ensure_ascii=False) + "\n")
+                n_ok += 1
+                word_counts.append(n_words)
+                print(f"[OK]        {doc_id:<35} {n_words} words")
+                time.sleep(1.5)  # be polite to the Wikipedia API
+
+        if n_ok == 0:
+            raise RuntimeError("no document was downloaded; keeping the existing corpus")
+        os.replace(tmp, OUT)  # replace the real corpus only after the whole build succeeded
+    except BaseException:
+        if tmp.exists():
+            tmp.unlink()  # failed or interrupted: drop the partial file, old corpus stays intact
+        raise
 
     print(f"\nDone: {n_ok}/{len(entries)} documents -> {OUT}")
     if word_counts:
