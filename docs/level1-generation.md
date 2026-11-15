@@ -1,5 +1,14 @@
 # Level 1 generation handoff
 
+## Required language model and historical measurements
+
+New generation and LLM-judge calls must use `gpt-6-luna`. Level 1 reuses the
+central `level0.complete()` function, with `reasoning_effort="none"` and
+`temperature=0`. See [model setup](model-setup.md) for local configuration.
+The November 10 and 11 Groq measurements below, and the raw records in
+`generation-integration.jsonl`, are historical development evidence, not
+measurements of the required model. A separate GPT-6 Luna run is recorded below.
+
 ## Run the generator
 
 Use the existing Level 0 LLM settings in `.env`. Once the retrieval module is
@@ -139,3 +148,25 @@ question family among its known failures. The two abstentions were explicitly
 produced by the model, and both have `rejected_answer` set to `null`.
 
 Raw records are in [generation-integration.jsonl](generation-integration.jsonl).
+
+## GPT-6 Luna end-to-end checks, November 15, 2026
+
+The connection check returned `gpt-6-luna`. The three cases were rerun with the
+real default retriever, `reasoning_effort="none"`, `temperature=0`, and the
+configured local retrieval index. These are individual calls, not a full
+evaluation or a controlled model-speed comparison. The first call includes
+initial retrieval model loading.
+
+| Question | Observed result | Reason | Total tokens | Latency (s) |
+|---|---|---|---:|---:|
+| Who directed Interstellar? | Interstellar was directed by Christopher Nolan. `[interstellar-2014#0]` | Accepted | 983 | 15.90 |
+| Who composed the music for Inception? | I don't know. | `model_abstained` | 963 | 1.11 |
+| In which film does a father send data to his daughter by moving the second hand of her wristwatch? | I don't know. | `model_abstained` | 926 | 0.81 |
+
+The director answer is correct and cites a retrieved passage. The music question
+correctly triggers abstention because the corpus does not provide the answer.
+The wristwatch question remains an answerable-case failure. Both abstentions
+come directly from the model, with `rejected_answer` set to `null`.
+
+Raw records, including the configured model and exact timings, are in
+[gpt6-luna-generation-integration.jsonl](gpt6-luna-generation-integration.jsonl).

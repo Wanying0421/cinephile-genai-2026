@@ -5,6 +5,13 @@ A movie and TV assistant built in levels, each one measured on the same test set
 
 Project: Mineur IA Générative 2026 (Text track). Theme: Cinéphile.
 
+## Required language model
+
+All generation and LLM-judge calls use **`gpt-6-luna`**, as required by the instructor.
+The shared `level0.complete()` function applies the same model and request settings
+to Level 0, Level 1 and the evaluator. Other `LLM_MODEL` values are rejected.
+See [model setup and migration](docs/model-setup.md) for the local setup and checks.
+
 ## Team
 
 | Member | Role |
@@ -40,14 +47,18 @@ cp .env.example .env
 ```
 
 ```
-LLM_BASE_URL=https://api.groq.com/openai/v1
+LLM_BASE_URL=https://api.openai.com/v1
 LLM_API_KEY=your_own_key_here
-LLM_MODEL=openai/gpt-oss-120b
-LLM_TEMPERATURE=0
+LLM_MODEL=gpt-6-luna
+RAG_MIN_SCORE=
 TMDB_API_KEY=
 ```
 
 **Never commit `.env`.** Each member uses their own API key.
+If the instructor supplies a school-specific API endpoint, use that endpoint in
+`LLM_BASE_URL`. Each member configures their own local `.env`; credentials are
+never distributed through Git. Restart Python after changing the configuration.
+Run `python check_llm.py` before running the evaluation.
 
 ## Usage
 
@@ -70,7 +81,11 @@ This runs Level 0 on every test case, writes raw results to
   - `ambiguous`: correct if the model abstains or asks a clarifying question
   - `multi_step`: not scored at Level 0 (no tools available)
 
-## Results
+## Historical results (Groq development run)
+
+These results predate the instructor's `gpt-6-luna` requirement. They are retained
+as development records and must not be presented as GPT-6 Luna measurements.
+Rerun both levels with the required model before reporting a final comparison.
 
 | Level | Accuracy | Abstention | Tokens / request | Latency |
 |---|---|---|---|---|
@@ -80,7 +95,8 @@ Setup: 9 test cases (7 scored), model `openai/gpt-oss-120b` via Groq, temperatur
 
 ## Known limitations
 
-- Only 9 test cases so far; the final set will have at least 40, so these numbers are provisional.
+- The historical run used only 9 test cases. The current test set has 44 cases;
+  the numbers above do not describe a run on that full set.
 - The judge model is the same as the answering model, so accuracy may be optimistic.
   A 20-case human-annotated calibration is planned.
 - Abstention detection only recognises the `[UNCERTAIN]` marker. In test 2, the model
