@@ -39,13 +39,9 @@ def _score_threshold(min_score):
 
 
 def _complete(messages):
-    from level0 import MODEL, client
+    from level0 import complete
 
-    return client.chat.completions.create(
-        model=MODEL,
-        temperature=0,
-        messages=messages,
-    )
+    return complete(messages)
 
 
 def _validated_citations(answer, allowed_ids):

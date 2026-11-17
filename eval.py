@@ -1,6 +1,6 @@
 import json
 import sys
-from level0 import run, client, MODEL
+from level0 import run, complete
 
 JUDGE_PROMPT = """You are a strict grader. Compare the ANSWER to the REFERENCE.
 Reply with exactly one word: CORRECT if the answer states the same key facts as the
@@ -11,10 +11,9 @@ REFERENCE: {ref}
 ANSWER: {ans}"""
 
 def judge(q, ref, ans):
-    r = client.chat.completions.create(
-        model=MODEL, temperature=0,
-        messages=[{"role": "user", "content": JUDGE_PROMPT.format(q=q, ref=ref, ans=ans)}],
-    )
+    r = complete([
+        {"role": "user", "content": JUDGE_PROMPT.format(q=q, ref=ref, ans=ans)},
+    ])
     return (r.choices[0].message.content or "").strip().upper().startswith("CORRECT")
 
 def score(test, out):
