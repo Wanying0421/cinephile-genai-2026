@@ -6,3 +6,4 @@ results/*.jsonl
 test.py
 index/
 data/*.tmp
+data/watchlist.sqlite3*

@@ -1,0 +1,76 @@
+[
+  {
+    "name": "search_movies",
+    "description": "Search TMDB by a movie title or title keywords. Returns up to five matches from page one. This is not genre discovery. Use year=null when no exact release year is requested.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "year": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1000,
+          "maximum": 9999
+        }
+      },
+      "required": [
+        "query",
+        "year"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_movie_details",
+    "description": "Get a movie's title, release date, overview, runtime and genres using its TMDB movie ID.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "movie_id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        }
+      },
+      "required": [
+        "movie_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "update_watchlist",
+    "description": "Propose adding or removing a movie in the shared local watchlist. This prepares a pending action, not an executed change. If needs_confirmation is true, show the exact proposal and wait for the user's decision through the application UI. Never claim a pending proposal was executed.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "add",
+            "remove"
+          ]
+        },
+        "movie_id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        }
+      },
+      "required": [
+        "action",
+        "movie_id"
+      ],
+      "additionalProperties": false
+    }
+  }
+]
