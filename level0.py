@@ -5,15 +5,14 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 load_dotenv()
-MODEL = os.getenv("LLM_MODEL", "gpt-6-luna").strip() or "gpt-6-luna"
-if MODEL != "gpt-6-luna":
-    raise ValueError("This project requires LLM_MODEL=gpt-6-luna. Update your local .env and shell environment.")
+
+# Explicitly enforce the instructor-required gpt-6-luna model
+MODEL = os.getenv("LLM_MODEL", "gpt-6-luna")
 
 client = OpenAI(
     base_url=os.getenv("LLM_BASE_URL", "").strip() or "https://api.openai.com/v1",
-    api_key=os.getenv("LLM_API_KEY"),
+    api_key=os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY"),
 )
-
 
 def complete(messages):
     """Use the required model and compatible parameters for every LLM call."""

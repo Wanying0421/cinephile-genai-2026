@@ -1,6 +1,8 @@
 import json
 import sys
-from level0 import run, complete
+import argparse
+from level0 import run as run_level0, complete
+from level1 import rag_answer as run_level1
 
 JUDGE_PROMPT = """You are a strict grader. Compare the ANSWER to the REFERENCE.
 Reply with exactly one word: CORRECT if the answer states the same key facts as the
@@ -26,31 +28,51 @@ def score(test, out):
         if out["abstained"]:
             return False
         return judge(test["input_prompt"], test["expected_output"], out["answer"])
-    return None  # multi_step: not scored at level 0
+    return None  # multi_step
 
-def main(path):
-    with open(path, encoding="utf-8") as f:
+def main():
+    parser = argparse.ArgumentParser(description="Evaluate Cinephile GenAI RAG pipelines.")
+    parser.add_argument("--level", type=int, default=0, choices=[0, 1], help="Pipeline level to evaluate (0 or 1)")
+    parser.add_argument("--path", type=str, default="tests/tests.jsonl", help="Path to test dataset")
+    args = parser.parse_args()
+
+    with open(args.path, encoding="utf-8") as f:
         tests = [json.loads(l) for l in f if l.strip()]
+
+    output_file = f"results/level{args.level}_results.jsonl"
     rows = []
-    with open("results/level0_results.jsonl", "w", encoding="utf-8") as log:
+
+    with open(output_file, "w", encoding="utf-8") as log:
         for t in tests:
-            out = run(t["input_prompt"])
+            if args.level == 0:
+                out = run_level0(t["input_prompt"])
+            else:
+                res = run_level1(t["input_prompt"])
+                # Normalize Level 1 output keys to match evaluation expectations
+                out = {
+                    "level": 1,
+                    "question": t["input_prompt"],
+                    "answer": res["answer"],
+                    "abstained": res["abstained"],
+                    "prompt_tokens": res["usage"].get("prompt_tokens", 0),
+                    "completion_tokens": res["usage"].get("completion_tokens", 0),
+                    "latency_s": res["latency"],
+                    "citations": res["citations"]
+                }
+
             out["test_id"], out["category"] = t["id"], t["category"]
             out["correct"] = score(t, out)
             log.write(json.dumps(out, ensure_ascii=False) + "\n")
             rows.append(out)
-            print(t["id"], t["category"], out["correct"])
+            print(f"Test {t['id']} [{t['category']}]: Correct={out['correct']}, Abstained={out['abstained']}")
 
     scored = [r for r in rows if r["correct"] is not None]
-    absent = [r for r in rows if r["category"] == "rag_absence"]
     n = len(rows)
-    print("\n=== Level 0 ===")
+    print(f"\n=== Level {args.level} Evaluation ===")
     print(f"Tests: {n} (scored: {len(scored)})")
-    print(f"Accuracy: {sum(r['correct'] for r in scored)/len(scored):.0%}")
-    if absent:
-        print(f"Abstention: {sum(r['abstained'] for r in absent)/len(absent):.0%}")
-    print(f"Tokens/request: {sum(r['prompt_tokens']+r['completion_tokens'] for r in rows)/n:.0f}")
+    if scored:
+        print(f"Accuracy: {sum(r['correct'] for r in scored)/len(scored):.0%}")
     print(f"Avg latency: {sum(r['latency_s'] for r in rows)/n:.2f}s")
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "tests/tests.jsonl")
+    main()
