@@ -74,5 +74,18 @@ state = {"approved_actions": ["<json_signature_string>"]}
   `state = {"approved_actions": ["{\"args\": {\"action\": \"add\", \"movie_title\": \"Inception\"}, \"tool\": \"update_watchlist\"}"]}`
 * **Agent Behavior:** Recognizes the signature, bypasses confirmation, and successfully executes the tool.
 
-### D. Failure / Error Handling Example (Unknown Tool / Malformed Call)
-* **Agent Behavior (Built-in Tool Validation):** If the model attempts to call a tool name not present in the allowed `TOOLS` registry, the loop catches it, logs an error trace, feeds the error description back to the model as a data observation, and prevents unauthorized execution.
+### D. Cancellation Example (User Rejects Action)
+- **Input Call:** `agent_answer("Add Inception to my watchlist", user_decision="cancel")`
+- **Agent Behavior:** Intercepts the user cancellation decision, aborts the execution loop, keeps storage entirely unchanged, and returns `stop_reason: "cancelled"`.
+- **Return Value Structure:**
+```json
+{
+  "answer": "Action update_watchlist was cancelled. Storage remains unchanged.",
+  "needs_confirmation": false,
+  "pending_action": null,
+  "state": {"approved_actions": []},
+  "trace": [],
+  "usage": {"prompt_tokens": 301, "completion_tokens": 24, "total_tokens": 325},
+  "latency": 0.05,
+  "stop_reason": "cancelled"
+}
