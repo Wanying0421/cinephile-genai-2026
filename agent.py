@@ -8,7 +8,6 @@ from level1 import rag_answer
 load_dotenv()
 MODEL = os.getenv("LLM_MODEL", "gpt-6-luna")
 
-# Define available tools (including a mock state-mutating tool as an example for confirmation)
 TOOLS = [
     {
         "type": "function",
@@ -50,21 +49,15 @@ You have access to tools to look up verified information or manage user watchlis
 """
 
 def execute_tool(tool_name, arguments):
-    """Safely validate and execute requested tools."""
     if tool_name == "rag_search":
         query = arguments.get("query", "")
-        # Reusing Level 1 RAG function correctly
         return rag_answer(query)
     elif tool_name == "update_watchlist":
-        # Mock execution for watchlist changes
         return {"status": "success", "message": f"Successfully performed {arguments.get('action')} on {arguments.get('movie_title')}."}
     else:
         return {"error": f"Unknown tool: {tool_name}"}
 
-def agent_answer(query, state=None):
-    """
-    Manual agent loop executing model requests, tool validation, action confirmation, and trace logging.
-    """
+def agent_answer(query, state=None, user_decision=None):
     started_at = perf_counter()
     client = OpenAI(
         base_url=os.getenv("LLM_BASE_URL", "").strip() or "https://api.openai.com/v1",
@@ -109,7 +102,6 @@ def agent_answer(query, state=None):
             for tool_call in choice.message.tool_calls:
                 tool_name = tool_call.function.name
                 
-                # --- Step 3: Tool Validation (Unknown Tool Check) ---
                 valid_tool_names = [t["function"]["name"] for t in TOOLS]
                 if tool_name not in valid_tool_names:
                     error_msg = f"Error: Tool '{tool_name}' does not exist."
@@ -133,9 +125,16 @@ def agent_answer(query, state=None):
                     "arguments": arguments
                 })
                 
-                # --- Step 4: Confirmation Handling for State-Mutating Actions ---
                 if tool_name == "update_watchlist":
                     action_signature = json.dumps({"tool": tool_name, "args": arguments}, sort_keys=True)
+                    
+                    if user_decision == "cancel":
+                        stop_reason = "cancelled"
+                        final_answer = f"Action {tool_name} was cancelled. Storage remains unchanged."
+                        needs_confirmation = False
+                        pending_action = None
+                        break
+
                     if action_signature not in current_state.get("approved_actions", []):
                         needs_confirmation = True
                         pending_action = {
@@ -145,9 +144,8 @@ def agent_answer(query, state=None):
                         }
                         stop_reason = "pending_confirmation"
                         final_answer = f"Please confirm if you want to perform: {tool_name} with arguments {arguments}."
-                        break # Pause loop to await user confirmation
+                        break 
 
-                # Execute tool if safe / confirmed
                 tool_result = execute_tool(tool_name, arguments)
                 
                 trace.append({
@@ -155,7 +153,6 @@ def agent_answer(query, state=None):
                     "tool_result": tool_result
                 })
                 
-                # Treat tool outputs strictly as data
                 messages.append({
                     "role": "tool",
                     "tool_call_id": tool_call.id,
@@ -165,7 +162,7 @@ def agent_answer(query, state=None):
             final_answer = choice.message.content or ""
             break
             
-        if needs_confirmation:
+        if needs_confirmation or user_decision == "cancel":
             break
 
     if iteration >= max_iterations and not final_answer and not needs_confirmation:
@@ -194,3 +191,6 @@ if __name__ == "__main__":
     
     print("\n--- Test 2: State-Mutating Action Requiring Confirmation ---")
     print(json.dumps(agent_answer("Add Inception to my watchlist"), indent=2, ensure_ascii=False))
+    
+    print("\n--- Test 3: Cancellation Flow ---")
+    print(json.dumps(agent_answer("Add Inception to my watchlist", user_decision="cancel"), indent=2, ensure_ascii=False))

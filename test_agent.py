@@ -6,7 +6,7 @@ def run_handoff_tests():
     res1 = agent_answer("What is the plot of Inception and who directed it?")
     print(json.dumps({
         "answer": res1["answer"],
-        - "stop_reason": res1["stop_reason"],
+        "stop_reason": res1["stop_reason"],
         "latency": f"{res1['latency']:.2f}s"
     }, indent=2))
 
@@ -32,6 +32,15 @@ def run_handoff_tests():
         "needs_confirmation": res3["needs_confirmation"],
         "state": res3["state"],
         "stop_reason": res3["stop_reason"]
+    }, indent=2))
+
+    print("\n=== 4. CANCELLATION EXAMPLE (User Rejects Action) ===")
+    res4 = agent_answer("Add Inception to my watchlist", user_decision="cancel")
+    print(json.dumps({
+        "answer": res4["answer"],
+        "needs_confirmation": res4["needs_confirmation"],
+        "state": res4["state"],
+        "stop_reason": res4["stop_reason"]
     }, indent=2))
 
 if __name__ == "__main__":
