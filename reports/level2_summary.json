@@ -1,0 +1,114 @@
+{
+  "model": "gpt-6-luna",
+  "tasks": 17,
+  "runs_per_task": 3,
+  "total_runs": 51,
+  "task_success_rate": 0.9803921568627451,
+  "pass^3": 0.9411764705882353,
+  "tokens_per_request": 1550.1296296296296,
+  "latency_per_request_s": 3.4636481481481476,
+  "per_task": {
+    "L2-01": {
+      "category": "confirmation",
+      "successes": 3,
+      "runs": 3,
+      "pass^3": true
+    },
+    "L2-02": {
+      "category": "cancellation",
+      "successes": 3,
+      "runs": 3,
+      "pass^3": true
+    },
+    "L2-03": {
+      "category": "duplicate",
+      "successes": 3,
+      "runs": 3,
+      "pass^3": true
+    },
+    "L2-04": {
+      "category": "confirmation",
+      "successes": 3,
+      "runs": 3,
+      "pass^3": true
+    },
+    "L2-05": {
+      "category": "cancellation",
+      "successes": 3,
+      "runs": 3,
+      "pass^3": true
+    },
+    "L2-06": {
+      "category": "changed_action",
+      "successes": 3,
+      "runs": 3,
+      "pass^3": true
+    },
+    "L2-07": {
+      "category": "invalid_id",
+      "successes": 3,
+      "runs": 3,
+      "pass^3": true
+    },
+    "L2-08": {
+      "category": "invalid_id",
+      "successes": 3,
+      "runs": 3,
+      "pass^3": true
+    },
+    "L2-09": {
+      "category": "ambiguous",
+      "successes": 3,
+      "runs": 3,
+      "pass^3": true
+    },
+    "L2-10": {
+      "category": "ambiguous",
+      "successes": 2,
+      "runs": 3,
+      "pass^3": false
+    },
+    "L2-11": {
+      "category": "api_error",
+      "successes": 3,
+      "runs": 3,
+      "pass^3": true
+    },
+    "L2-12": {
+      "category": "api_error",
+      "successes": 3,
+      "runs": 3,
+      "pass^3": true
+    },
+    "L2-13": {
+      "category": "multi_step",
+      "successes": 3,
+      "runs": 3,
+      "pass^3": true
+    },
+    "L2-14": {
+      "category": "multi_step",
+      "successes": 3,
+      "runs": 3,
+      "pass^3": true
+    },
+    "L2-15": {
+      "category": "multi_step",
+      "successes": 3,
+      "runs": 3,
+      "pass^3": true
+    },
+    "L2-16": {
+      "category": "rag_reuse",
+      "successes": 3,
+      "runs": 3,
+      "pass^3": true
+    },
+    "L2-17": {
+      "category": "details",
+      "successes": 3,
+      "runs": 3,
+      "pass^3": true
+    }
+  }
+}
