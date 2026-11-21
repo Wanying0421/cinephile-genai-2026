@@ -28,13 +28,24 @@ def score(test, out):
         if out["abstained"]:
             return False
         return judge(test["input_prompt"], test["expected_output"], out["answer"])
-    return None  # multi_step
+    return None  # multi_step: scored at Level 2 by eval_agent.py (final watchlist state)
 
 def main():
-    parser = argparse.ArgumentParser(description="Evaluate Cinephile GenAI RAG pipelines.")
-    parser.add_argument("--level", type=int, default=0, choices=[0, 1], help="Pipeline level to evaluate (0 or 1)")
-    parser.add_argument("--path", type=str, default="tests/tests.jsonl", help="Path to test dataset")
+    parser = argparse.ArgumentParser(description="Evaluate Cinephile GenAI pipelines (Levels 0, 1, 2).")
+    parser.add_argument("--level", type=int, default=0, choices=[0, 1, 2], help="Pipeline level to evaluate")
+    parser.add_argument("--path", type=str, default="tests/tests.jsonl", help="Path to test dataset (Levels 0/1)")
+    parser.add_argument("--agent-path", type=str, default="tests/agent_tests.jsonl", help="Agent tasks (Level 2)")
+    parser.add_argument("--runs", type=int, default=3, help="Runs per agent task for pass^k (Level 2)")
+    parser.add_argument("--only", nargs="*", help="Level 2 only: task ids to run")
     args = parser.parse_args()
+
+    if args.level == 2:
+        import eval_agent
+        argv = ["--path", args.agent_path, "--runs", str(args.runs)]
+        if args.only:
+            argv += ["--only", *args.only]
+        eval_agent.main(argv)
+        return
 
     with open(args.path, encoding="utf-8") as f:
         tests = [json.loads(l) for l in f if l.strip()]
